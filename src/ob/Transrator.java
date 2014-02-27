@@ -1,15 +1,7 @@
 package ob;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -35,36 +27,19 @@ public class Transrator {
 	private static final String P_NAME = "P-NAME";
 	private static final String ATTR = "ATTR";
 	
+	private static Dictionary dictionary;
+	
 	public static void main(String[] args) {
-		// 辞書オブジェクトの作成
-		HashMap<String, String> dictionaryMap = new HashMap<>();
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary.csv"), "UTF-8"));
-			String line;
-			while ((line = br.readLine()) != null) {
-				line = line.replaceAll("\"", "");
-				String[] map = line.split(",");
-				String jap, eng;
-				jap = map[0];
-				eng = (map.length == 2) ? map[1] : "";
-				String[] camel = eng.split( "(?<=[a-z])(?=[A-Z])" );
-				StringBuilder sb = new StringBuilder(camel[0]);
-				for (int i = 1; i < camel.length; i++) {
-					sb.append("_");
-					sb.append(camel[i]);
-				}
-				dictionaryMap.put(jap, sb.toString().toUpperCase());
-			}
-			br.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (args.length != 2 && args.length != 3) {
+			System.err.println("usage: dictionary_file.csv japanese_model.edm [english_model.edm]");
+			return;
 		}
 		
-		// XMLファイルを読み込んで，変換する
+		dictionary = new Dictionary(args[0]);
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			File input = new File("input.edm");
+			File input = new File(args[1]);
 
 			Node root = builder.parse(input);
 			Node edr = root.getFirstChild();
@@ -72,39 +47,24 @@ public class Transrator {
 			for (int i = 0; i < list.getLength(); i++) {
 				Node n = list.item(i);
 				if (n.getNodeName().equals(ENTITY)) {
+					nodeTranslator(n);
 					NodeList entityList = n.getChildNodes();
 					for (int eIndex = 0; eIndex < entityList.getLength(); eIndex++) {
 						Node entityChild = entityList.item(eIndex);
 						if (entityChild.getNodeName().equals(ATTR)) {
-							NamedNodeMap attr = entityChild.getAttributes();
-							Node lName = attr.getNamedItem(L_NAME);
-							String japanese = lName.getNodeValue();
-							List<String> trans = new ArrayList<>();
-							while (!japanese.equals("")) {
-								String cand = "";
-								for (String key: dictionaryMap.keySet()) {
-									if (japanese.startsWith(key) && cand.length() < key.length()) {
-										cand = key.toString();
-									}
-								}
-								trans.add(cand);
-								japanese = japanese.substring(cand.length());
-							}
-							if (trans.size() == 0) continue;
-							StringBuilder english = new StringBuilder(dictionaryMap.get(trans.get(0)));
-							for (int j = 1; j < trans.size(); j++) {
-								english.append("_");
-								english.append(dictionaryMap.get(trans.get(j)));
-							}
-							Node pName = attr.getNamedItem(P_NAME);
-							pName.setNodeValue(english.toString());
+							nodeTranslator(entityChild);
 						}
 					}
 				}
 			}
 			
-			File output = new File("output.edm");
-			write(output, (Document) root, "UTF-8");
+			String outputFileName = (args.length == 3) ? args[2] : "output.edm";
+			File output = new File(outputFileName);
+			if (write(output, (Document) root, "UTF-8")) {
+				System.out.println("success");
+			} else {
+				System.out.println("failed");
+			}
 			
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
@@ -115,6 +75,40 @@ public class Transrator {
 		}
 	}
 	
+	private static boolean nodeTranslator(Node n) {
+		NamedNodeMap attr = n.getAttributes();
+		Node lName = attr.getNamedItem(L_NAME);
+		String japanese = lName.getNodeValue();
+		List<String> trans = dictionary.transList(japanese);
+		if (trans.size() == 0) {
+			return false;
+		}
+		
+		String english = constructSnakeCase(trans);
+		Node pName = attr.getNamedItem(P_NAME);
+		pName.setNodeValue(english.toString());
+		return true;
+	}
+	
+	private static String constructSnakeCase(List<String> trans) {
+		StringBuilder str = new StringBuilder(trans.get(0));
+		for (int j = 1; j < trans.size(); j++) {
+			String t = trans.get(j);
+			if (t.equals("")) continue;
+			str.append("_");
+			str.append(t);
+		}
+		return str.toString();
+	}
+	
+	/**
+	 * 借り物
+	 * xmlファイルを出力する
+	 * @param file
+	 * @param document
+	 * @param encoding
+	 * @return
+	 */
     private static boolean write(File file, Document document, String encoding) {
 
         // Transformerインスタンスの生成
