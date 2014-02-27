@@ -21,18 +21,19 @@ public class Transrator {
 	private static final String ENTITY = "ENTITY";
 	private static final String L_NAME = "L-NAME";
 	private static final String P_NAME = "P-NAME";
+	private static final String ATTR = "ATTR";
 	
 	public static void main(String[] args) {
-		File dictionaly = new File("dictionaly.csv");
-		try {
-			BufferedReader br = new BufferedReader(new FileReader(dictionaly));
-			String line;
-			while ((line = br.readLine()) != null) {
-				
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		File dictionaly = new File("dictionaly.csv");
+//		try {
+//			BufferedReader br = new BufferedReader(new FileReader(dictionaly));
+//			String line;
+//			while ((line = br.readLine()) != null) {
+//				
+//			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
@@ -43,15 +44,18 @@ public class Transrator {
 			PrintWriter pw = new PrintWriter(output);
 			Node root = builder.parse(input);
 			Node edr = root.getFirstChild();
-			NodeList list = root.getChildNodes();
+			NodeList list = edr.getChildNodes();
 			for (int i = 0; i < list.getLength(); i++) {
 				Node n = list.item(i);
 				if (n.getNodeName().equals(ENTITY)) {
-					NamedNodeMap attr = n.getAttributes();
-					Node lName = attr.getNamedItem(L_NAME);
 					NodeList entityList = n.getChildNodes();
 					for (int eIndex = 0; eIndex < entityList.getLength(); eIndex++) {
 						Node entityChild = entityList.item(eIndex);
+						if (entityChild.getNodeName().equals(ATTR)) {
+							NamedNodeMap attr = entityChild.getAttributes();
+							Node lName = attr.getNamedItem(L_NAME);
+							System.out.println(lName.getNodeValue());
+						}
 					}
 				}
 			}
