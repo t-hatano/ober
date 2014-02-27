@@ -34,39 +34,30 @@ public class Transrator {
 	private static final String L_NAME = "L-NAME";
 	private static final String P_NAME = "P-NAME";
 	private static final String ATTR = "ATTR";
-	private static final String DDOMAINID = "DDOMAINID";
 	
 	public static void main(String[] args) {
 		// 辞書オブジェクトの作成
 		HashMap<String, String> dictionaryMap = new HashMap<>();
-//		File dictionaryFile = new File("tmp-u.csv");
 		try {
-//			BufferedReader br = new BufferedReader(new FileReader(dictionaryFile));
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp.csv"), "UTF-8"));
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary.csv"), "UTF-8"));
 			String line;
 			while ((line = br.readLine()) != null) {
 				line = line.replaceAll("\"", "");
 				String[] map = line.split(",");
-				if (map.length != 2) {
-					System.err.println("invalid dictionaly");
-					br.close();
-					return;
-				}
-				String[] camel = map[1].split( "(?<=[a-z])(?=[A-Z])" );
+				String jap, eng;
+				jap = map[0];
+				eng = (map.length == 2) ? map[1] : "";
+				String[] camel = eng.split( "(?<=[a-z])(?=[A-Z])" );
 				StringBuilder sb = new StringBuilder(camel[0]);
 				for (int i = 1; i < camel.length; i++) {
 					sb.append("_");
 					sb.append(camel[i]);
 				}
-				dictionaryMap.put(map[0], sb.toString().toUpperCase());
+				dictionaryMap.put(jap, sb.toString().toUpperCase());
 			}
 			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-		
-		for (String key: dictionaryMap.keySet()) {
-			System.out.println(key + ":" + dictionaryMap.get(key));
 		}
 		
 		// XMLファイルを読み込んで，変換する
@@ -100,10 +91,10 @@ public class Transrator {
 								japanese = japanese.substring(cand.length());
 							}
 							if (trans.size() == 0) continue;
-							StringBuilder english = new StringBuilder(trans.get(0));
+							StringBuilder english = new StringBuilder(dictionaryMap.get(trans.get(0)));
 							for (int j = 1; j < trans.size(); j++) {
 								english.append("_");
-								english.append(trans.get(j));
+								english.append(dictionaryMap.get(trans.get(j)));
 							}
 							Node pName = attr.getNamedItem(P_NAME);
 							pName.setNodeValue(english.toString());
