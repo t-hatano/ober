@@ -5,18 +5,23 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 public class Dictionary {
 
-	private HashMap<String, String> dictionaryMap = new HashMap<>();
+	private TreeMap<String, String> dictionaryMap;
 	
 	/**
 	 * 辞書オブジェクトを作る
 	 * @param dictionaryFileName
 	 */
 	public Dictionary(String dictionaryFileName) {
+		dictionaryMap = new TreeMap<>(new StringComparator());
+		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dictionaryFileName), "UTF-8"));
 			String line;
@@ -41,27 +46,17 @@ public class Dictionary {
 	}
 	
 	/**
-	 * japaneseの先頭から，辞書にある単語のうち最長のものを抽出する
+	 * japanese の先頭から，辞書にある単語を抽出する
 	 * @param japanese
 	 * @return
 	 */
 	public String extractBeginWord(String japanese) {
-		String cand = "";
 		for (String key: dictionaryMap.keySet()) {
-			if (japanese.startsWith(key) && cand.length() < key.length()) {
-				cand = key.toString();
+			if (japanese.startsWith(key)) {
+				return key.toString();
 			}
 		}
-		return cand;
-	}
-	
-	/**
-	 * 日本語の単語を英語に変換する
-	 * @param word
-	 * @return
-	 */
-	public String translate(String word) {
-		return dictionaryMap.get(word);
+		return "";
 	}
 	
 	/**
@@ -69,19 +64,21 @@ public class Dictionary {
 	 * @param japanese
 	 * @return
 	 */
-	public List<String> transList(String japanese) {
-		List<String> trans = new ArrayList<>();
-		String prev, next;
-		prev = next = japanese;
-		while (!next.equals("")) {
-			String word = extractBeginWord(next);
-			trans.add(translate(word));
-			prev = next;
-			next = prev.substring(word.length());
-			if (next.length() > prev.length()) {
-				break;
-			}
+	public String translateAll(String japanese) {
+		for (String key: dictionaryMap.keySet()) {
+			String jap = key;
+			String eng = dictionaryMap.get(key) + "_";
+			japanese = japanese.replaceAll(jap, eng);
 		}
-		return trans;
+		japanese = japanese.replaceAll("__", "_");
+		japanese = japanese.replaceAll("_$", "");
+		return japanese;
 	}
+
 }
+
+class StringComparator implements Comparator {
+    public int compare( Object object1, Object object2 ){
+        return ( (Comparable)object1 ).compareTo( object2 ) * -1;
+    }
+} 

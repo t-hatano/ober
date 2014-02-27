@@ -23,9 +23,9 @@ import org.xml.sax.SAXException;
 public class Translator {
 
 	private static final String ENTITY = "ENTITY";
-	private static final String L_NAME = "L-NAME";
 	private static final String P_NAME = "P-NAME";
 	private static final String ATTR = "ATTR";
+	private static final String INDEX = "INDEX";
 	private static final String ENCODING = "UTF-8";
 	private static final String DEFAULT_OUTPUT = "output.edm";
 	
@@ -57,7 +57,7 @@ public class Translator {
 					NodeList entityList = n.getChildNodes();
 					for (int eIndex = 0; eIndex < entityList.getLength(); eIndex++) {
 						Node entityChild = entityList.item(eIndex);
-						if (entityChild.getNodeName().equals(ATTR)) {
+						if (entityChild.getNodeName().equals(ATTR) || entityChild.getNodeName().equals(INDEX)) {
 							nodeTranslator(entityChild);
 						}
 					}
@@ -84,35 +84,16 @@ public class Translator {
 	/**
 	 * ノード中のP_NAMEを英語に変換する
 	 * @param n
-	 * @return true : 変換できた
-	 *          false: 変換失敗 
+	 * @return
 	 */
-	private static boolean nodeTranslator(Node n) {
+	private static void nodeTranslator(Node n) {
 		NamedNodeMap attr = n.getAttributes();
-		Node lName = attr.getNamedItem(L_NAME);
-		String japanese = lName.getNodeValue();
-		List<String> trans = dictionary.transList(japanese);
-		if (trans.size() == 0) {
-			return false;
-		}
-		
-		String english = constructSnakeCase(trans);
 		Node pName = attr.getNamedItem(P_NAME);
+		String japanese = pName.getNodeValue();
+		String english = dictionary.translateAll(japanese);
 		pName.setNodeValue(english.toString());
-		return true;
 	}
-	
-	private static String constructSnakeCase(List<String> trans) {
-		StringBuilder str = new StringBuilder(trans.get(0));
-		for (int j = 1; j < trans.size(); j++) {
-			String t = trans.get(j);
-			if (t.equals("")) continue;
-			str.append("_");
-			str.append(t);
-		}
-		return str.toString();
-	}
-	
+
 	/**
 	 * 借り物
 	 * xmlファイルを出力する
@@ -140,8 +121,7 @@ public class Translator {
 
         // XMLファイルの作成
         try {
-             transformer.transform(new DOMSource(document), new StreamResult(
-                       file));
+             transformer.transform(new DOMSource(document), new StreamResult(file));
         } catch (TransformerException e) {
              e.printStackTrace();
              return false;
