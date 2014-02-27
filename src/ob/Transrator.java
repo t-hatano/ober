@@ -69,8 +69,6 @@ public class Transrator {
 			System.out.println(key + ":" + dictionaryMap.get(key));
 		}
 		
-		if (args.length == 0) return;
-		
 		// XMLファイルを読み込んで，変換する
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
@@ -92,12 +90,14 @@ public class Transrator {
 							String japanese = lName.getNodeValue();
 							List<String> trans = new ArrayList<>();
 							while (!japanese.equals("")) {
+								String cand = "";
 								for (String key: dictionaryMap.keySet()) {
-									if (japanese.startsWith(key)) {
-										trans.add(dictionaryMap.get(key));
-										japanese = japanese.substring(key.length());
+									if (japanese.startsWith(key) && cand.length() < key.length()) {
+										cand = key.toString();
 									}
 								}
+								trans.add(cand);
+								japanese = japanese.substring(cand.length());
 							}
 							if (trans.size() == 0) continue;
 							StringBuilder english = new StringBuilder(trans.get(0));
@@ -105,12 +105,8 @@ public class Transrator {
 								english.append("_");
 								english.append(trans.get(j));
 							}
-							attr.removeNamedItem(P_NAME);
-							Document doc = (Document) root;
-							Node engPName = doc.createElement(P_NAME);
-							Node value = doc.createTextNode(english.toString());
-							engPName.appendChild(value);
-							entityChild.insertBefore(engPName, attr.getNamedItem(DDOMAINID));
+							Node pName = attr.getNamedItem(P_NAME);
+							pName.setNodeValue(english.toString());
 						}
 					}
 				}
