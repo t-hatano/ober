@@ -2,7 +2,6 @@ package ob;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,6 +25,7 @@ public class Translator {
 	private static final String P_NAME = "P-NAME";
 	private static final String ATTR = "ATTR";
 	private static final String INDEX = "INDEX";
+	private static final String RELATION = "RELATION";
 	private static final String ENCODING = "UTF-8";
 	private static final String DEFAULT_OUTPUT = "output.edm";
 	
@@ -57,10 +57,13 @@ public class Translator {
 					NodeList entityList = n.getChildNodes();
 					for (int eIndex = 0; eIndex < entityList.getLength(); eIndex++) {
 						Node entityChild = entityList.item(eIndex);
-						if (entityChild.getNodeName().equals(ATTR) || entityChild.getNodeName().equals(INDEX)) {
+						if (entityChild.getNodeName().equals(ATTR) 
+							|| entityChild.getNodeName().equals(INDEX)) {
 							nodeTranslator(entityChild);
 						}
 					}
+				} else if (n.getNodeName().equals(RELATION)) {
+					nodeTranslator(n);
 				}
 			}
 			
