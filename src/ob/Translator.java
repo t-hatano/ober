@@ -37,9 +37,16 @@ public class Translator {
 	 * @param args: {辞書ファイル, 日本語のモデル, [出力先]}
 	 */
 	public static void main(String[] args) {
+		// 引数のチェックと入力ファイル名のチェック
 		if (args.length != 2 && args.length != 3) {
 			System.err.println("usage: dictionary_file.csv japanese_model.edm [english_model.edm]");
 			return;
+		}
+		if (!args[0].endsWith(".csv")) {
+			System.err.println(args[0] + ": Not CSV");
+		}
+		if (!args[1].endsWith(".edm")) {
+			System.err.println(args[1] + ": Not EDM");
 		}
 		
 		dictionary = new Dictionary(args[0]);
