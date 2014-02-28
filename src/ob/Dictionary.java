@@ -77,8 +77,13 @@ public class Dictionary {
 
 }
 
-class StringComparator implements Comparator {
-    public int compare( Object object1, Object object2 ){
-        return ( (Comparable)object1 ).compareTo( object2 ) * -1;
+class StringComparator implements Comparator<String> {
+    public int compare(String s1, String s2){
+    	int diff = s2.length() - s1.length();
+    	if (diff != 0) {
+    		return diff;
+    	}
+    	return s1.compareTo(s2);
     }
+
 } 

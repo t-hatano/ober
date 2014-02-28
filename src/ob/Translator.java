@@ -12,6 +12,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.OutputKeys;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -98,7 +99,6 @@ public class Translator {
 	}
 
 	/**
-	 * 借り物
 	 * xmlファイルを出力する
 	 * @param file
 	 * @param document
@@ -119,9 +119,10 @@ public class Translator {
         }
 
         // Transformerの設定
-        transformer.setOutputProperty("indent", "yes"); //改行指定
-        transformer.setOutputProperty("encoding", encoding); // エンコーディング
-
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.ENCODING, encoding);
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        
         // XMLファイルの作成
         try {
              transformer.transform(new DOMSource(document), new StreamResult(file));
