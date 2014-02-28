@@ -2,6 +2,8 @@ package ob;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Stack;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,26 +54,28 @@ public class Translator {
 		dictionary = new Dictionary(args[0]);
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
+			HashSet<String> targetNodeName = new HashSet<>();
+			targetNodeName.add(ENTITY);
+			targetNodeName.add(ATTR);
+			targetNodeName.add(INDEX);
+			targetNodeName.add(RELATION);
+			
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			File input = new File(args[1]);
-
 			Node root = builder.parse(input);
 			Node edr = root.getFirstChild();
-			NodeList list = edr.getChildNodes();
-			for (int i = 0; i < list.getLength(); i++) {
-				Node n = list.item(i);
-				if (n.getNodeName().equals(ENTITY)) {
+			
+			Stack<Node> stack = new Stack<>();
+			stack.add(edr);
+			while (!stack.isEmpty()) {
+//				Node n = stack.peek();
+				Node n = stack.pop();
+				if (targetNodeName.contains(n.getNodeName())) {
 					nodeTranslator(n);
-					NodeList entityList = n.getChildNodes();
-					for (int eIndex = 0; eIndex < entityList.getLength(); eIndex++) {
-						Node entityChild = entityList.item(eIndex);
-						if (entityChild.getNodeName().equals(ATTR) 
-							|| entityChild.getNodeName().equals(INDEX)) {
-							nodeTranslator(entityChild);
-						}
-					}
-				} else if (n.getNodeName().equals(RELATION)) {
-					nodeTranslator(n);
+				}
+				NodeList children = n.getChildNodes();
+				for (int i = 0; i < children.getLength(); i++) {
+					stack.add(children.item(i));
 				}
 			}
 			
@@ -100,6 +104,7 @@ public class Translator {
 	private static void nodeTranslator(Node n) {
 		NamedNodeMap attr = n.getAttributes();
 		Node pName = attr.getNamedItem(P_NAME);
+		if (pName == null) return;
 		String japanese = pName.getNodeValue();
 		String english = dictionary.translateAll(japanese);
 		pName.setNodeValue(english.toString());
