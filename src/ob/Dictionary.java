@@ -42,20 +42,6 @@ public class Dictionary {
 	}
 	
 	/**
-	 * japanese の先頭から，辞書にある単語を抽出する
-	 * @param japanese
-	 * @return
-	 */
-	public String extractBeginWord(String japanese) {
-		for (String key: dictionaryMap.keySet()) {
-			if (japanese.startsWith(key)) {
-				return key.toString();
-			}
-		}
-		return "";
-	}
-	
-	/**
 	 * 日本語を snake case の英語に変換する
 	 * @param japanese
 	 * @return
